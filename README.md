@@ -2,8 +2,8 @@
 <!-- [![PyPI version](https://badge.fury.io/py/npvcc2016.svg)](https://badge.fury.io/py/npVCC2016) -->
 <!-- ![Python Versions](https://img.shields.io/pypi/pyversions/npvcc2016.svg)   -->
 
-`jsss` is a Python package for loader of [JSSS: Japanese speech corpus 
-for summarization and simplification](https://sites.google.com/site/shinnosuketakamichi/research-topics/jsss_corpus).  
+`jsss` is a Python package for loader of **[JSSS: Japanese speech corpus 
+for summarization and simplification](https://sites.google.com/site/shinnosuketakamichi/research-topics/jsss_corpus)**.  
 For machine learning, corpus/dataset is indispensable - but troublesome - part.  
 We need portable & flexible loader for streamline development.  
 `jsss` is the one!!  
@@ -41,6 +41,18 @@ jsss corpus is speech corpus, so we provide `waveform` dataset and `spectrogram`
   - PyTorch-Lightning
     - waveform: `NpVCC2016DataModule`
     - spectrogram: `NpVCC2016_spec_DataModule`
+
+## Original paper
+[![Paper](http://img.shields.io/badge/paper-arxiv.2010.01793-B31B1B.svg)][paper]  
+<!-- https://arxiv2bibtex.org/?q=2010.01793&format=bibtex -->
+```
+@misc{2010.01793,
+Author = {Shinnosuke Takamichi and Mamoru Komachi and Naoko Tanji and Hiroshi Saruwatari},
+Title = {JSSS: free Japanese speech corpus for summarization and simplification},
+Year = {2020},
+Eprint = {arXiv:2010.01793},
+}
+```
 
 ## Dependency Notes
 ### PyTorch version
