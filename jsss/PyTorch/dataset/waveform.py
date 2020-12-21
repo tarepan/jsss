@@ -54,7 +54,7 @@ class JSSS_wave(Dataset): # I failed to understand this error
     """
     def __init__(
         self,
-        mode: List[Mode] = ["short-form/basic5000"],
+        modes: List[Mode] = ["short-form/basic5000"],
         transform: Callable[[Tensor], Tensor] = (lambda i: i),
         download_corpus: bool = False,
         dir_data: str = "./data/",
@@ -90,7 +90,7 @@ class JSSS_wave(Dataset): # I failed to understand this error
         self._path_contents_local = Path(dir_data)/"datasets"/"JSSS_wave"/"contents"
 
         # Prepare the dataset.
-        self._ids: List[ItemIdJSSS] = list(filter(lambda id: id.mode in mode, self._corpus.get_identities()))
+        self._ids: List[ItemIdJSSS] = list(filter(lambda id: id.mode in modes, self._corpus.get_identities()))
         contents_acquired = try_to_acquire_archive_contents(
             self._path_contents_local,
             self._path_archive_local,
