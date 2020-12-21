@@ -1,5 +1,5 @@
 from jsss.getGoogleDriveContents import getGDriveLargeContents
-from typing import Dict, List, NamedTuple, Optional
+from typing import Dict, List, NamedTuple, Optional, Union
 from pathlib import Path
 
 import fsspec # type: ignore
@@ -34,7 +34,7 @@ modes = [
 
 class ItemIdJSSS(NamedTuple):
     mode: Mode
-    serial_num: str
+    serial_num: int
 
 
 class JSSS:
@@ -121,14 +121,14 @@ class JSSS:
             Full item identity list.
         """
         divs = {
-            "short-form/basic5000": map(lambda num: str(num).zfill(4), range(1, 3001)),
-            "short-form/onomatopee300": map(lambda num: str(num).zfill(3), range(1, 186)),
-            "short-form/voiceactress100": map(lambda num: str(num).zfill(3), range(1, 101)),
-            "long-form/katsura-masakazu": map(lambda num: str(num).zfill(2), range(1, 60)),
-            "long-form/udon": map(lambda num: str(num).zfill(2), range(1, 87)),
-            "long-form/washington-dc": map(lambda num: str(num).zfill(2), range(1, 24)),
-            "simplification": map(lambda num: str(num).zfill(3), range(1, 228)),
-            "summarization": map(lambda num: str(num).zfill(4), range(1, 227))
+            "short-form/basic5000": range(1, 3001),
+            "short-form/onomatopee300": range(1, 186),
+            "short-form/voiceactress100": range(1, 101),
+            "long-form/katsura-masakazu": range(1, 60),
+            "long-form/udon": range(1, 87),
+            "long-form/washington-dc": range(1, 24),
+            "simplification": range(1, 228),
+            "summarization": range(1, 227),
         }
         ids: List[ItemIdJSSS] = []
         for mode in modes:
@@ -145,15 +145,42 @@ class JSSS:
         Returns:
             Path of the specified item.
         """
-        prefix: Dict[Mode, str] = {
-            "short-form/basic5000": "BASIC5000",
-            "short-form/onomatopee300": "ONOMATOPEE300",
-            "short-form/voiceactress100": "VOICEACTRESS100",
-            "long-form/katsura-masakazu": "KATSURA-MASAKAZU",
-            "long-form/udon": "UDON",
-            "long-form/washington-dc": "WASHINGTON-DC",
-            "simplification": "SIMPLIFICATION",
-            "summarization": "SUMMARIZATION"
+        name: Dict[Mode, Dict[str, Union[str, int]]] = {
+            "short-form/basic5000": {
+                "prefix": "BASIC5000",
+                "zpad": 4
+            },
+            "short-form/onomatopee300": {
+                "prefix": "ONOMATOPEE300",
+                "zpad": 3
+            },
+            "short-form/voiceactress100": {
+                "prefix": "VOICEACTRESS100",
+                "zpad": 3
+            },
+            "long-form/katsura-masakazu": {
+                "prefix": "KATSURA-MASAKAZU",
+                "zpad": 2
+            },
+            "long-form/udon": {
+                "prefix": "UDON",
+                "zpad": 2
+            },
+            "long-form/washington-dc": {
+                "prefix": "WASHINGTON-DC",
+                "zpad": 2
+            },
+            "simplification": {
+                "prefix": "SIMPLIFICATION",
+                "zpad": 3
+            },
+            "summarization": {
+                "prefix": "SUMMARIZATION",
+                "zpad": 3
+            }
         }
-        p = f"{str(self._path_contents_local)}/{self._corpus_name}/{id.mode}/wav24kHz16bit/{prefix[id.mode]}_{id.serial_num}.wav"
+        root = str(self._path_contents_local)
+        prefix = name[id.mode]["prefix"]
+        num = str(id.serial_num).zfill(int(name[id.mode]["zpad"]))
+        p = f"{root}/{self._corpus_name}/{id.mode}/wav24kHz16bit/{prefix}_{num}.wav"
         return Path(p)
