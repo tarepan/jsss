@@ -5,7 +5,8 @@ import pytorch_lightning as pl  # type: ignore
 from torch.tensor import Tensor
 from torch.utils.data import random_split, DataLoader
 
-from ...dataset.waveform import NpVCC2016_wave, Speaker
+from ...dataset.waveform import JSSS_wave
+from ....corpus import Mode
 
 
 class NpVCC2016DataModule(pl.LightningDataModule):
@@ -18,14 +19,14 @@ class NpVCC2016DataModule(pl.LightningDataModule):
         batch_size: int,
         download: bool,
         dir_root: str = "./data/",
-        speakers: List[Speaker] = ["SF1", "SM1", "TF2", "TM3"],
+        modes: List[Mode] = ["short-form/basic5000"],
         transform: Callable[[Tensor], Tensor] = lambda i: i,
     ):
         super().__init__()
         self.n_batch = batch_size
         self.download = download
         self.dir_root = dir_root
-        self.speakers = speakers
+        self.modes = modes
         self.transform = transform
         # transforms.Compose([transforms.ToTensor()])
 
@@ -35,17 +36,17 @@ class NpVCC2016DataModule(pl.LightningDataModule):
         # self.dims = (1, 28, 28)
 
     def prepare_data(self, *args, **kwargs) -> None:
-        NpVCC2016_wave(train=True, download_corpus=self.download, dir_data=self.dir_root)
+        pass
 
     def setup(self, stage: Union[str, None] = None) -> None:
         if stage == "fit" or stage is None:
-            dataset_train = NpVCC2016_wave(train=True, transform=self.transform, dir_data=self.dir_root)
+            dataset_train = JSSS_wave(modes=self.modes, transform=self.transform, dir_data=self.dir_root)
             n_train = len(dataset_train)
             self.data_train, self.data_val = random_split(
                 dataset_train, [n_train - 10, 10]
             )
         if stage == "test" or stage is None:
-            self.data_test = NpVCC2016_wave(train=False, transform=self.transform, dir_data=self.dir_root)
+            self.data_test = JSSS_wave(modes=self.modes, transform=self.transform, dir_data=self.dir_root)
 
     def train_dataloader(self, *args, **kwargs):
         return DataLoader(self.data_train, batch_size=self.n_batch)
