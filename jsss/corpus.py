@@ -42,7 +42,7 @@ class JSSS:
         self,
         download : bool = False,
         url: Optional[str] = None,
-        dir_corpus_local: str = "./data/corpuses/jsss/"
+        dir_corpus_local: str = "./data/corpuses/JSSS/"
     ) -> None:
         """
         Wrapper of JSSS corpus.
