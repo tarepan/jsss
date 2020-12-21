@@ -1,4 +1,6 @@
+from jsss.getGoogleDriveContents import getGDriveLargeContents
 from pathlib import Path
+from typing import Optional
 import zipfile
 import shutil
 
@@ -21,8 +23,10 @@ def acquire_zip_fs(adress: str, adress_local_cache: str = "./tmp/data/cache") ->
 def try_to_acquire_archive_contents(
     path_contents_local: Path,
     path_archive_local: Path,
-    adress_archive: str,
-    download: bool = False
+    adress_archive: Optional[str],
+    download: bool = False,
+    gdrive_id: Optional[str] = None,
+    file_size_GB: float = 0.
 ) -> bool:
     """
     Try to acquire the contents of the archive.
@@ -30,6 +34,7 @@ def try_to_acquire_archive_contents(
       1. (already extracted) local contents
       2. locally stored archive
       3. adress-specified (local|remote) archive through fsspec
+    `gdrive_id` is hack for google drive archive.
 
     Returns:
         True if success_acquisition else False
@@ -47,22 +52,35 @@ def try_to_acquire_archive_contents(
         extract_archive(str(path_archive_local), str(path_contents_local))
         return True
     else:
-        fs: fsspec.AbstractFileSystem = fsspec.filesystem(get_protocol(adress_archive))
-        archiveExists = fs.exists(adress_archive)
-        archiveIsFile = fs.isfile(adress_archive)
+        if adress_archive:
+            # validation for gdrive
+            fs: fsspec.AbstractFileSystem = fsspec.filesystem(get_protocol(adress_archive))
+            archiveExists = fs.exists(adress_archive)
+            archiveIsFile = fs.isfile(adress_archive)
 
-        if archiveExists and (not archiveIsFile):
-            raise RuntimeError(f"Archive ({adress_archive}) should be file or empty, but it is directory.")
+            if archiveExists and (not archiveIsFile):
+                raise RuntimeError(f"Archive ({adress_archive}) should be file or empty, but it is directory.")
 
-        if archiveExists and download:
-            # A dataset file exist, so pull and extract.
-            path_archive_local.parent.mkdir(parents=True, exist_ok=True)
-            fs.get_file(adress_archive, path_archive_local)
-            extract_archive(str(path_archive_local), str(path_contents_local))
-            return True
+            if archiveExists and download:
+                # A dataset file exist, so pull and extract.
+                path_archive_local.parent.mkdir(parents=True, exist_ok=True)
+                fs.get_file(adress_archive, path_archive_local)
+                extract_archive(str(path_archive_local), str(path_contents_local))
+                return True
+            else:
+                # no corresponding archive. Failed to acquire.
+                return False
         else:
-            # no corresponding archive. Failed to acquire.
-            return False
+            # gdrive contents.
+            # Archive file should exists.
+            if download:
+                if gdrive_id is None:
+                    raise RuntimeError("`grive_id` should exist when `adress_archive` is `None`")
+                getGDriveLargeContents(gdrive_id, path_archive_local, file_size_GB)
+                extract_archive(str(path_archive_local), str(path_contents_local))
+                return True
+            else:
+                return False
 
 
 def save_archive(path_contents: Path, path_archive_local: Path, adress_archive: str, compression: bool = True) -> None:

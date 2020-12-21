@@ -9,15 +9,15 @@ from torchaudio import load as load_wav
 from torchaudio.transforms import Spectrogram  # type: ignore
 
 from .waveform import get_dataset_wave_path, preprocess_as_wave
-from ...corpus import ItemIdNpVCC2016, Mode, NpVCC2016, Speaker
+from ...corpus import ItemIdJSSS, Mode, JSSS, Speaker
 from ...fs import acquire_zip_fs, save_archive, try_to_acquire_archive_contents
 
 
-def get_dataset_spec_path(dir_dataset: Path, id: ItemIdNpVCC2016) -> Path:
+def get_dataset_spec_path(dir_dataset: Path, id: ItemIdJSSS) -> Path:
     return dir_dataset / id.mode / id.speaker / "specs" / f"{id.serial_num}.spec.pt"
 
 
-def preprocess_as_spec(corpus: NpVCC2016, dir_dataset: Path) -> None:
+def preprocess_as_spec(corpus: JSSS, dir_dataset: Path) -> None:
     """
     Transform npVCC2016 corpus contents into spectrogram Tensor.
     """
@@ -90,13 +90,13 @@ class NpVCC2016_spec(Dataset): # I failed to understand this error
         #     npVCC2016_spec/
         #       archive/dataset.zip
         #       contents/{extracted dirs & files}
-        self._corpus = NpVCC2016(download_corpus, corpus_adress, f"{dir_data}/corpuses/npVCC2016/")
+        self._corpus = JSSS(download_corpus, corpus_adress, f"{dir_data}/corpuses/npVCC2016/")
         self._path_archive_local = Path(dir_data)/"datasets"/"npVCC2016_spec"/"archive"/"dataset.zip"
         self._path_contents_local = Path(dir_data)/"datasets"/"npVCC2016_spec"/"contents"
 
         # Prepare the dataset.
         mode: Mode = "trains" if train else "evals"
-        self._ids: List[ItemIdNpVCC2016] = list(
+        self._ids: List[ItemIdJSSS] = list(
             filter(lambda id: id.speaker in speakers,
                 filter(lambda id: id.mode == mode,
                     self._corpus.get_identities()
@@ -144,10 +144,10 @@ class NpVCC2016_spec(Dataset): # I failed to understand this error
                 (self._path_corpus / mode / speaker / "specs").mkdir(exist_ok=True)
                 self._data_cache[mode][speaker] = {}
 
-    def _load_spec_cache(self, id: ItemIdNpVCC2016) -> Tensor:
+    def _load_spec_cache(self, id: ItemIdJSSS) -> Tensor:
         return self._data_cache[id.mode][id.speaker][id.serial_num]
 
-    def _load_datum(self, id: ItemIdNpVCC2016) -> Union[Datum_NpVCC2016_spec_train, Datum_NpVCC2016_spec_test]:
+    def _load_datum(self, id: ItemIdJSSS) -> Union[Datum_NpVCC2016_spec_train, Datum_NpVCC2016_spec_test]:
         spec_path = get_dataset_spec_path(self._path_contents_local, id)
         spec: Tensor = self._transform(self._load_spec_cache(id) if self._cache else load(spec_path))
         if self._train:
@@ -157,7 +157,7 @@ class NpVCC2016_spec(Dataset): # I failed to understand this error
             waveform: Tensor = load(get_dataset_wave_path(self._path_contents_local, id))
             return Datum_NpVCC2016_spec_test(waveform, spec, f"{id.mode}-{id.speaker}-{id.serial_num}")
 
-    def _load_datum_from_fs(self, id: ItemIdNpVCC2016) -> Union[Datum_NpVCC2016_spec_train, Datum_NpVCC2016_spec_test]:
+    def _load_datum_from_fs(self, id: ItemIdJSSS) -> Union[Datum_NpVCC2016_spec_train, Datum_NpVCC2016_spec_test]:
         with self._fs.open(get_dataset_spec_path(Path("/"), id), mode="rb") as f_s:
             spec: Tensor = self._transform(load(io.BytesIO(f_s.read())))
         if self._train:

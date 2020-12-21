@@ -16,14 +16,14 @@ from torch.utils.data import Dataset
 from torchaudio import load as load_wav
 
 from ...fs import try_to_acquire_archive_contents, save_archive, acquire_zip_fs
-from ...corpus import ItemIdNpVCC2016, Mode, NpVCC2016, Speaker
+from ...corpus import ItemIdJSSS, Mode, JSSS, Speaker
 
 
-def get_dataset_wave_path(dir_dataset: Path, id: ItemIdNpVCC2016) -> Path:
+def get_dataset_wave_path(dir_dataset: Path, id: ItemIdJSSS) -> Path:
     return dir_dataset / id.mode / id.speaker / "waves" / f"{id.serial_num}.wave.pt"
 
 
-def preprocess_as_wave(corpus: NpVCC2016, dir_dataset: Path) -> None:
+def preprocess_as_wave(corpus: JSSS, dir_dataset: Path) -> None:
     """
     Transform npVCC2016 corpus contents into waveform Tensor.
     Before this preprocessing, corpus contents should be deployed.
@@ -91,13 +91,13 @@ class NpVCC2016_wave(Dataset): # I failed to understand this error
         #     npVCC2016_wave/
         #       archive/dataset.zip
         #       contents/{extracted dirs & files}
-        self._corpus = NpVCC2016(download_corpus, corpus_adress, f"{dir_data}/corpuses/npVCC2016/")
+        self._corpus = JSSS(download_corpus, corpus_adress, f"{dir_data}/corpuses/npVCC2016/")
         self._path_archive_local = Path(dir_data)/"datasets"/"npVCC2016_wave"/"archive"/"dataset.zip"
         self._path_contents_local = Path(dir_data)/"datasets"/"npVCC2016_wave"/"contents"
 
         # Prepare the dataset.
         mode: Mode = "trains" if train else "evals"
-        self._ids: List[ItemIdNpVCC2016] = list(
+        self._ids: List[ItemIdJSSS] = list(
             filter(lambda id: id.speaker in speakers,
                 filter(lambda id: id.mode == mode,
                     self._corpus.get_identities()
@@ -129,11 +129,11 @@ class NpVCC2016_wave(Dataset): # I failed to understand this error
         self._corpus.get_contents()
         preprocess_as_wave(self._corpus, self._path_contents_local)
 
-    def _load_datum(self, id: ItemIdNpVCC2016) -> Datum_NpVCC2016_wave:
+    def _load_datum(self, id: ItemIdJSSS) -> Datum_NpVCC2016_wave:
         waveform: Tensor = load(get_dataset_wave_path(self._path_contents_local, id))
         return Datum_NpVCC2016_wave(self._transform(waveform), f"{id.mode}-{id.speaker}-{id.serial_num}")
 
-    def _load_datum_from_fs(self, id: ItemIdNpVCC2016) -> Datum_NpVCC2016_wave:
+    def _load_datum_from_fs(self, id: ItemIdJSSS) -> Datum_NpVCC2016_wave:
         with self._fs.open(get_dataset_wave_path(Path("/"), id), mode="rb") as f:
             waveform: Tensor = load(io.BytesIO(f.read()))
         return Datum_NpVCC2016_wave(self._transform(waveform), f"{id.mode}-{id.speaker}-{id.serial_num}")
