@@ -32,7 +32,7 @@ What you have to do is only instantiating the class!
 ## APIs
 Current `jsss` support PyTorch.  
 As interface, PyTorch's `Dataset` and PyTorch-Lightning's `DataModule` are provided.  
-jsss corpus is speech corpus, so we provide `waveform` dataset and `spectrogram` dataset for both interfaces.  
+JSSS corpus is speech corpus, so we provide `waveform` dataset and `spectrogram` dataset for both interfaces.  
 
 - PyTorch
   - (pure PyTorch) dataset
