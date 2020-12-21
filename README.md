@@ -2,11 +2,11 @@
 <!-- [![PyPI version](https://badge.fury.io/py/npvcc2016.svg)](https://badge.fury.io/py/npVCC2016) -->
 <!-- ![Python Versions](https://img.shields.io/pypi/pyversions/npvcc2016.svg)   -->
 
-`jsss` is a Python package for loader of **[JSSS: Japanese speech corpus 
+`jsss` is a Python loader of **[JSSS: Japanese speech corpus 
 for summarization and simplification](https://sites.google.com/site/shinnosuketakamichi/research-topics/jsss_corpus)**.  
 For machine learning, corpus/dataset is indispensable - but troublesome - part.  
 We need portable & flexible loader for streamline development.  
-`jsss` is the one!!  
+`jsss` is the one!  
 
 ## Demo
 
@@ -36,11 +36,11 @@ jsss corpus is speech corpus, so we provide `waveform` dataset and `spectrogram`
 
 - PyTorch
   - (pure PyTorch) dataset
-    - waveform: `NpVCC2016`
-    - spectrogram: `NpVCC2016_spec`
+    - waveform: `JSSS_wave`
+    - spectrogram: `JSSS_spec`
   - PyTorch-Lightning
-    - waveform: `NpVCC2016DataModule`
-    - spectrogram: `NpVCC2016_spec_DataModule`
+    - waveform: `JSSSDataModule`
+    - spectrogram: `JSSS_spec_DataModule`
 
 ## Original paper
 [![Paper](http://img.shields.io/badge/paper-arxiv.2010.01793-B31B1B.svg)][paper]  
@@ -64,3 +64,6 @@ Unfortunately it make dependency version management complicated for dependency m
 In our case, the system `poetry` cannot handle cuda variant string (e.g. `torch>=1.6.0` cannot accept `1.6.0+cu101`.)  
 In order to resolve this problem, we use `torch==*`, it is equal to no version specification.  
 `Setup.py` could resolve this problem (e.g. `torchaudio`'s `setup.py`), but we will not bet our effort to this hacky method.  
+
+
+[paper]:https://arxiv.org/abs/2010.01793
