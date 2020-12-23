@@ -22,6 +22,7 @@ class JSSS_spec_DataModule(pl.LightningDataModule):
         transform: Callable[[Tensor], Tensor] = lambda i: i,
         corpus_adress: Optional[str] = None,
         dataset_adress: str = "./data/datasets/JSSS_spec/archive/dataset.zip",
+        resample_sr: Optional[int] = None,
     ):
         super().__init__()
         self.n_batch = batch_size
@@ -31,6 +32,7 @@ class JSSS_spec_DataModule(pl.LightningDataModule):
         self.transform = transform
         self.corpus_adress = corpus_adress
         self.dataset_adress = dataset_adress
+        self._resample_sr = resample_sr
 
     def prepare_data(self, *args, **kwargs) -> None:
         pass
@@ -44,6 +46,7 @@ class JSSS_spec_DataModule(pl.LightningDataModule):
                 dir_data=self.dir_root,
                 corpus_adress=self.corpus_adress,
                 dataset_adress=self.dataset_adress,
+                resample_sr=self._resample_sr,
             )
             n_train = len(dataset_train)
             self.data_train, self.data_val = random_split(
@@ -57,6 +60,7 @@ class JSSS_spec_DataModule(pl.LightningDataModule):
                 dir_data=self.dir_root,
                 corpus_adress=self.corpus_adress,
                 dataset_adress=self.dataset_adress,
+                resample_sr=self._resample_sr,
             )
 
     def train_dataloader(self, *args, **kwargs):

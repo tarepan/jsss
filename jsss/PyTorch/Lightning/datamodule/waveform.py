@@ -1,4 +1,4 @@
-from typing import Callable, List, Union
+from typing import Callable, List, Optional, Union
 
 # currently there is no stub in pytorch lightning
 import pytorch_lightning as pl  # type: ignore
@@ -20,6 +20,7 @@ class NpVCC2016DataModule(pl.LightningDataModule):
         download: bool,
         dir_root: str = "./data/",
         modes: List[Mode] = ["short-form/basic5000"],
+        resample_sr: Optional[int] = None,
         transform: Callable[[Tensor], Tensor] = lambda i: i,
     ):
         super().__init__()
@@ -28,6 +29,7 @@ class NpVCC2016DataModule(pl.LightningDataModule):
         self.dir_root = dir_root
         self.modes = modes
         self.transform = transform
+        self._resample_sr = resample_sr
         # transforms.Compose([transforms.ToTensor()])
 
         # self.dims is returned when you call dm.size()
@@ -40,13 +42,23 @@ class NpVCC2016DataModule(pl.LightningDataModule):
 
     def setup(self, stage: Union[str, None] = None) -> None:
         if stage == "fit" or stage is None:
-            dataset_train = JSSS_wave(modes=self.modes, transform=self.transform, dir_data=self.dir_root)
+            dataset_train = JSSS_wave(
+                modes=self.modes,
+                transform=self.transform,
+                dir_data=self.dir_root,
+                resample_sr=self._resample_sr
+            )
             n_train = len(dataset_train)
             self.data_train, self.data_val = random_split(
                 dataset_train, [n_train - 10, 10]
             )
         if stage == "test" or stage is None:
-            self.data_test = JSSS_wave(modes=self.modes, transform=self.transform, dir_data=self.dir_root)
+            self.data_test = JSSS_wave(
+                modes=self.modes,
+                transform=self.transform,
+                dir_data=self.dir_root,
+                resample_sr=self._resample_sr
+            )
 
     def train_dataloader(self, *args, **kwargs):
         return DataLoader(self.data_train, batch_size=self.n_batch)
