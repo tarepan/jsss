@@ -19,8 +19,6 @@ def try_to_acquire_archive_contents(pull_from: str, extract_to: Path) -> bool:
         True if success_acquisition else False
     """
 
-    pull_from_with_cache = f"simplecache::{pull_from}"
-
     # validation
     if extract_to.is_file():
         raise RuntimeError(f"contents ({str(extract_to)}) should be directory or empty, but it is file.")
@@ -29,10 +27,10 @@ def try_to_acquire_archive_contents(pull_from: str, extract_to: Path) -> bool:
     if extract_to.exists():
         return True
     else:
-        fs: fsspec.AbstractFileSystem = fsspec.filesystem(get_protocol(pull_from_with_cache))
+        fs: fsspec.AbstractFileSystem = fsspec.filesystem(get_protocol(pull_from))
         # todo: get_protocol with cache
-        archiveExists = fs.exists(pull_from_with_cache)
-        archiveIsFile = fs.isfile(pull_from_with_cache)
+        archiveExists = fs.exists(pull_from)
+        archiveIsFile = fs.isfile(pull_from)
 
         # No corresponding archive. Failed to acquire.
         if not archiveExists:
@@ -40,9 +38,10 @@ def try_to_acquire_archive_contents(pull_from: str, extract_to: Path) -> bool:
         else:
             # validation
             if not archiveIsFile:
-                raise RuntimeError(f"Archive ({pull_from_with_cache}) should be file or empty, but is directory.")
+                raise RuntimeError(f"Archive ({pull_from}) should be file or empty, but is directory.")
 
             # A dataset file exists, so pull and extract.
+            pull_from_with_cache = f"simplecache::{pull_from}"
             extract_to.mkdir(parents=True, exist_ok=True)
             with fsspec.open(pull_from_with_cache, "rb") as archive:
                 with NamedTemporaryFile("wb") as tmp:
