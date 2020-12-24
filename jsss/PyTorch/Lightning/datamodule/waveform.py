@@ -18,14 +18,14 @@ class NpVCC2016DataModule(pl.LightningDataModule):
         self,
         batch_size: int,
         download: bool,
-        modes: List[Subtype] = ["short-form/basic5000"],
+        subtypes: List[Subtype] = ["short-form/basic5000"],
         resample_sr: Optional[int] = None,
         transform: Callable[[Tensor], Tensor] = lambda i: i,
     ):
         super().__init__()
         self.n_batch = batch_size
         self.download = download
-        self.modes = modes
+        self._subtypes = subtypes
         self.transform = transform
         self._resample_sr = resample_sr
 
@@ -34,11 +34,11 @@ class NpVCC2016DataModule(pl.LightningDataModule):
 
     def setup(self, stage: Union[str, None] = None) -> None:
         if stage == "fit" or stage is None:
-            dataset_train = JSSS_wave(self.modes, self.download, None, None, self._resample_sr, self.transform)
+            dataset_train = JSSS_wave(self._subtypes, self.download, None, None, self._resample_sr, self.transform)
             n_train = len(dataset_train)
             self.data_train, self.data_val = random_split(dataset_train, [n_train - 10, 10])
         if stage == "test" or stage is None:
-            self.data_test = JSSS_wave(self.modes, self.download, None, None, self._resample_sr, self.transform)
+            self.data_test = JSSS_wave(self._subtypes, self.download, None, None, self._resample_sr, self.transform)
 
     def train_dataloader(self, *args, **kwargs):
         return DataLoader(self.data_train, batch_size=self.n_batch)

@@ -20,7 +20,7 @@ from ...corpus import ItemIdJSSS, Subtype, JSSS
 
 
 def get_dataset_wave_path(dir_dataset: Path, id: ItemIdJSSS) -> Path:
-    return dir_dataset / id.mode / "waves" / f"{id.serial_num}.wave.pt"
+    return dir_dataset / id.subtype / "waves" / f"{id.serial_num}.wave.pt"
 
 
 def preprocess_as_wave(corpus: JSSS, dir_dataset: Path, new_sr: Optional[int] = None) -> None:
@@ -41,8 +41,7 @@ def preprocess_as_wave(corpus: JSSS, dir_dataset: Path, new_sr: Optional[int] = 
 
 
 class Datum_JSSS_wave(NamedTuple):
-    """
-    Datum of JSSS dataset
+    """Datum of JSSS dataset
     """
 
     waveform: Tensor
@@ -56,7 +55,7 @@ class JSSS_wave(Dataset): # I failed to understand this error
     """
     def __init__(
         self,
-        modes: List[Subtype] = ["short-form/basic5000"],
+        subtypes: List[Subtype] = ["short-form/basic5000"],
         download_corpus: bool = False,
         corpus_adress: Optional[str] = None,
         dataset_adress: Optional[str] = None,
@@ -65,7 +64,7 @@ class JSSS_wave(Dataset): # I failed to understand this error
     ):
         """
         Args:
-            modes: Sub corpus types.
+            subtypes: Sub corpus types.
             download_corpus: Whether download the corpus or not when dataset is not found.
             corpus_adress: URL/localPath of corpus archive (remote url, like `s3::`, can be used). None use default URL.
             dataset_adress: URL/localPath of dataset archive (remote url, like `s3::`, can be used).
@@ -82,13 +81,13 @@ class JSSS_wave(Dataset): # I failed to understand this error
         self._transform = transform
 
         self._corpus = JSSS(corpus_adress, download_corpus)
-        dirname = hash_args(modes, download_corpus, corpus_adress, dataset_adress, resample_sr)
+        dirname = hash_args(subtypes, download_corpus, corpus_adress, dataset_adress, resample_sr)
         JSSS_wave_root = Path(".")/"tmp"/"JSSS_wave"
         self._path_contents_local = JSSS_wave_root/"contents"/dirname
         dataset_adress = dataset_adress if dataset_adress else str(JSSS_wave_root/"archive"/f"{dirname}.zip")
 
         # Prepare data identities.
-        self._ids: List[ItemIdJSSS] = list(filter(lambda id: id.mode in modes, self._corpus.get_identities()))
+        self._ids: List[ItemIdJSSS] = list(filter(lambda id: id.subtype in subtypes, self._corpus.get_identities()))
 
         # Deploy dataset contents.
         contents_acquired = try_to_acquire_archive_contents(dataset_adress, self._path_contents_local)
@@ -108,7 +107,7 @@ class JSSS_wave(Dataset): # I failed to understand this error
 
     def _load_datum(self, id: ItemIdJSSS) -> Datum_JSSS_wave:
         waveform: Tensor = load(get_dataset_wave_path(self._path_contents_local, id))
-        return Datum_JSSS_wave(self._transform(waveform), f"{id.mode}-{id.serial_num}")
+        return Datum_JSSS_wave(self._transform(waveform), f"{id.subtype}-{id.serial_num}")
 
     def __getitem__(self, n: int) -> Datum_JSSS_wave:
         """Load the n-th sample from the dataset.

@@ -12,7 +12,7 @@ from ...archive import hash_args, try_to_acquire_archive_contents, save_archive
 
 
 def get_dataset_spec_path(dir_dataset: Path, id: ItemIdJSSS) -> Path:
-    return dir_dataset / id.mode / "specs" / f"{id.serial_num}.spec.pt"
+    return dir_dataset / id.subtype / "specs" / f"{id.serial_num}.spec.pt"
 
 
 def preprocess_as_spec(corpus: JSSS, dir_dataset: Path, new_sr: Optional[int] = None) -> None:
@@ -49,7 +49,7 @@ class JSSS_spec(Dataset): # I failed to understand this error
 
     def __init__(
         self,
-        modes: List[Subtype] = ["short-form/basic5000"],
+        subtypes: List[Subtype] = ["short-form/basic5000"],
         download_corpus: bool = False,
         corpus_adress: Optional[str] = None,
         dataset_adress: Optional[str] = None,
@@ -58,7 +58,7 @@ class JSSS_spec(Dataset): # I failed to understand this error
     ):
         """
         Args:
-            modes: Sub corpus types.
+            subtypes: Sub corpus types.
             download_corpus: Whether download the corpus or not when dataset is not found.
             corpus_adress: URL/localPath of corpus archive (remote url, like `s3::`, can be used). None use default URL.
             dataset_adress: URL/localPath of dataset archive (remote url, like `s3::`, can be used).
@@ -75,13 +75,13 @@ class JSSS_spec(Dataset): # I failed to understand this error
         self._transform = transform
 
         self._corpus = JSSS(corpus_adress, download_corpus)
-        dirname = hash_args(modes, download_corpus, corpus_adress, dataset_adress, resample_sr)
+        dirname = hash_args(subtypes, download_corpus, corpus_adress, dataset_adress, resample_sr)
         JSSS_spec_root = Path(".")/"tmp"/"JSSS_spec"
         self._path_contents_local = JSSS_spec_root/"contents"/dirname
         dataset_adress = dataset_adress if dataset_adress else str(JSSS_spec_root/"archive"/f"{dirname}.zip")
 
         # Prepare data identities.
-        self._ids: List[ItemIdJSSS] = list(filter(lambda id: id.mode in modes, self._corpus.get_identities()))
+        self._ids: List[ItemIdJSSS] = list(filter(lambda id: id.subtype in subtypes, self._corpus.get_identities()))
 
         # Deploy dataset contents.
         contents_acquired = try_to_acquire_archive_contents(dataset_adress, self._path_contents_local)
@@ -104,7 +104,7 @@ class JSSS_spec(Dataset): # I failed to understand this error
         spec_path = get_dataset_spec_path(self._path_contents_local, id)
         spec: Tensor = self._transform(load(spec_path))
         # todo: trains/evals
-        return Datum_JSSS_spec_train(spec, f"{id.mode}-{id.serial_num}")
+        return Datum_JSSS_spec_train(spec, f"{id.subtype}-{id.serial_num}")
         # else:
         #     waveform: Tensor = load(get_dataset_wave_path(self._path_contents_local, id))
         #     return Datum_JSSS_spec_test(waveform, spec, f"{id.mode}-{id.serial_num}")

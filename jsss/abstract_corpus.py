@@ -10,6 +10,10 @@ Inheritance of the interface and method implementation with handling functions i
     class MyCorpus(AbstractCorpus[Id]):
         ...
     ```
+
+## Glossary
+- archive: Single archive file.
+- contents: A directory in which archive's contents exist.
 """
 
 
