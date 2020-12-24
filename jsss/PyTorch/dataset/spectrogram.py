@@ -15,21 +15,22 @@ def get_dataset_spec_path(dir_dataset: Path, id: ItemIdJSSS) -> Path:
     return dir_dataset / id.subtype / "specs" / f"{id.serial_num}.spec.pt"
 
 
-def preprocess_as_spec(corpus: JSSS, dir_dataset: Path, new_sr: Optional[int] = None) -> None:
+def preprocess_as_spec(path_wav: Path, id: ItemIdJSSS, dir_dataset: Path, new_sr: Optional[int] = None) -> None:
+    """Transform JSSS corpus contents into spectrogram Tensor.
+
+    Before this preprocessing, corpus contents should be deployed.
     """
-    Transform JSSS corpus contents into spectrogram Tensor.
-    """
-    for id in corpus.get_identities():
-        waveform, _sr_orig = load_wav(corpus.get_item_path(id))
-        if new_sr is not None:
-            waveform = Resample(_sr_orig, new_sr)(waveform)
-        # :: [1, Length] -> [Length,]
-        waveform: Tensor = waveform[0, :]
-        # defaults: hop_length = win_length // 2, window_fn = torch.hann_window, power = 2
-        spec: Tensor = Spectrogram(254)(waveform)
-        path_spec = get_dataset_spec_path(dir_dataset, id)
-        path_spec.parent.mkdir(parents=True, exist_ok=True)
-        save(spec, path_spec)
+    
+    waveform, _sr_orig = load_wav(path_wav)
+    if new_sr is not None:
+        waveform = Resample(_sr_orig, new_sr)(waveform)
+    # :: [1, Length] -> [Length,]
+    waveform: Tensor = waveform[0, :]
+    # defaults: hop_length = win_length // 2, window_fn = torch.hann_window, power = 2
+    spec: Tensor = Spectrogram(254)(waveform)
+    path_spec = get_dataset_spec_path(dir_dataset, id)
+    path_spec.parent.mkdir(parents=True, exist_ok=True)
+    save(spec, path_spec)
 
 
 class Datum_JSSS_spec_train(NamedTuple):
@@ -93,12 +94,14 @@ class JSSS_spec(Dataset): # I failed to understand this error
             print("Dataset contents was generated and archive was saved.")
 
     def _generate_dataset_contents(self) -> None:
+        """Generate dataset with corpus auto-download and preprocessing.
         """
-        Generate dataset with corpus auto-download and preprocessing.
-        """
+
         self._corpus.get_contents()
-        preprocess_as_wave(self._corpus, self._path_contents_local, self._resample_sr)
-        preprocess_as_spec(self._corpus, self._path_contents_local, self._resample_sr)
+        for id in self._corpus.get_identities():
+            path_wav = self._corpus.get_item_path(id)
+            preprocess_as_spec(path_wav, id, self._path_contents_local, self._resample_sr)
+            preprocess_as_wave(path_wav, id, self._path_contents_local, self._resample_sr)
 
     def _load_datum(self, id: ItemIdJSSS) -> Union[Datum_JSSS_spec_train, Datum_JSSS_spec_test]:
         spec_path = get_dataset_spec_path(self._path_contents_local, id)

@@ -23,21 +23,20 @@ def get_dataset_wave_path(dir_dataset: Path, id: ItemIdJSSS) -> Path:
     return dir_dataset / id.subtype / "waves" / f"{id.serial_num}.wave.pt"
 
 
-def preprocess_as_wave(corpus: JSSS, dir_dataset: Path, new_sr: Optional[int] = None) -> None:
-    """
-    Transform JSSS corpus contents into waveform Tensor.
+def preprocess_as_wave(path_wav: Path, id: ItemIdJSSS, dir_dataset: Path, new_sr: Optional[int] = None) -> None:
+    """Transform JSSS corpus contents into waveform Tensor.
+    
     Before this preprocessing, corpus contents should be deployed.
     """
-    for id in corpus.get_identities():
-        # todo: sr adjustment
-        waveform, _sr_orig = load_wav(corpus.get_item_path(id))
-        if new_sr is not None:
-            waveform = Resample(_sr_orig, new_sr)(waveform)
-        # :: [1, Length] -> [Length,]
-        waveform: Tensor = waveform[0, :]
-        path_wave = get_dataset_wave_path(dir_dataset, id)
-        path_wave.parent.mkdir(parents=True, exist_ok=True)
-        save(waveform, path_wave)
+
+    waveform, _sr_orig = load_wav(path_wav)
+    if new_sr is not None:
+        waveform = Resample(_sr_orig, new_sr)(waveform)
+    # :: [1, Length] -> [Length,]
+    waveform: Tensor = waveform[0, :]
+    path_wave = get_dataset_wave_path(dir_dataset, id)
+    path_wave.parent.mkdir(parents=True, exist_ok=True)
+    save(waveform, path_wave)
 
 
 class Datum_JSSS_wave(NamedTuple):
@@ -99,11 +98,13 @@ class JSSS_wave(Dataset): # I failed to understand this error
             print("Dataset contents was generated and archive was saved.")
 
     def _generate_dataset_contents(self) -> None:
+        """Generate dataset with corpus auto-download and preprocessing.
         """
-        Generate dataset with corpus auto-download and preprocessing.
-        """
+
         self._corpus.get_contents()
-        preprocess_as_wave(self._corpus, self._path_contents_local, self._resample_sr)
+        for id in self._corpus.get_identities():
+            path_wav = self._corpus.get_item_path(id)
+            preprocess_as_wave(path_wav, id, self._path_contents_local, self._resample_sr)
 
     def _load_datum(self, id: ItemIdJSSS) -> Datum_JSSS_wave:
         waveform: Tensor = load(get_dataset_wave_path(self._path_contents_local, id))

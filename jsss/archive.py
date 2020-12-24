@@ -47,7 +47,9 @@ def try_to_acquire_archive_contents(pull_from: str, extract_to: Path) -> bool:
                 with NamedTemporaryFile("wb") as tmp:
                     tmp.write(archive.read())
                     tmp.seek(0)
+                    print("extracting...")
                     extract_archive(tmp.name, str(extract_to))
+                    print("extracted.")
             return True
 
 
