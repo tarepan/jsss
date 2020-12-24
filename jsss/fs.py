@@ -1,74 +1,53 @@
 from jsss.getGoogleDriveContents import getGDriveLargeContents
 from pathlib import Path
-from typing import Optional
 import shutil
+from tempfile import NamedTemporaryFile
 
 import fsspec
 from fsspec.utils import get_protocol
 from torchaudio.datasets.utils import extract_archive
 
 
-def try_to_acquire_archive_contents(
-    path_contents_local: Path,
-    path_archive_local: Path,
-    adress_archive: Optional[str],
-    download: bool = False,
-    gdrive_id: Optional[str] = None,
-    file_size_GB: float = 0.
-) -> bool:
+def try_to_acquire_archive_contents(pull_from: str, extract_to: Path) -> bool:
     """
     Try to acquire the contents of the archive.
     Priority:
       1. (already extracted) local contents
-      2. locally stored archive
-      3. adress-specified (local|remote) archive through fsspec
-    `gdrive_id` is hack for google drive archive.
+      2. adress-specified (local|remote) archive through fsspec
 
     Returns:
         True if success_acquisition else False
     """
-    # validation
-    if path_contents_local.is_file():
-        raise RuntimeError(f"contents ({str(path_contents_local)}) should be directory or empty, but it is file.")
-    if path_archive_local.is_dir():
-        raise RuntimeError(f"archive ({str(path_archive_local)}) should be file or empty, but it is directory.")
+    pull_from_with_cache = f"simplecache::{pull_from}"
 
-    if path_contents_local.exists():
+    # validation
+    if extract_to.is_file():
+        raise RuntimeError(f"contents ({str(extract_to)}) should be directory or empty, but it is file.")
+
+    if extract_to.exists():
         # contents directory already exists.
         return True
-    elif path_archive_local.exists():
-        extract_archive(str(path_archive_local), str(path_contents_local))
-        return True
     else:
-        if adress_archive:
-            # validation for gdrive
-            fs: fsspec.AbstractFileSystem = fsspec.filesystem(get_protocol(adress_archive))
-            archiveExists = fs.exists(adress_archive)
-            archiveIsFile = fs.isfile(adress_archive)
+        fs: fsspec.AbstractFileSystem = fsspec.filesystem(get_protocol(pull_from_with_cache))
+        archiveExists = fs.exists(pull_from_with_cache)
+        archiveIsFile = fs.isfile(pull_from_with_cache)
 
-            if archiveExists and (not archiveIsFile):
-                raise RuntimeError(f"Archive ({adress_archive}) should be file or empty, but it is directory.")
+        # validation
+        if archiveExists and (not archiveIsFile):
+            raise RuntimeError(f"Archive ({pull_from_with_cache}) should be file or empty, but it is directory.")
 
-            if archiveExists and download:
-                # A dataset file exist, so pull and extract.
-                path_archive_local.parent.mkdir(parents=True, exist_ok=True)
-                fs.get_file(adress_archive, path_archive_local)
-                extract_archive(str(path_archive_local), str(path_contents_local))
-                return True
-            else:
-                # no corresponding archive. Failed to acquire.
-                return False
+        # A dataset file exist, so pull and extract.
+        if archiveExists:
+            extract_to.mkdir(parents=True, exist_ok=True)
+            with fsspec.open(pull_from_with_cache, "rb") as archive:
+                with NamedTemporaryFile("wb") as tmp:
+                    tmp.write(archive.read())
+                    tmp.seek(0)
+                    extract_archive(tmp.name, str(extract_to))
+            return True
+        # no corresponding archive. Failed to acquire.
         else:
-            # gdrive contents.
-            # Archive file should exists.
-            if download:
-                if gdrive_id is None:
-                    raise RuntimeError("`grive_id` should exist when `adress_archive` is `None`")
-                getGDriveLargeContents(gdrive_id, path_archive_local, file_size_GB)
-                extract_archive(str(path_archive_local), str(path_contents_local))
-                return True
-            else:
-                return False
+            return False
 
 
 def save_archive(path_contents: Path, path_archive_local: Path, adress_archive: str) -> None:

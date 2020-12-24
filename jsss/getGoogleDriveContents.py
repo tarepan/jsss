@@ -1,5 +1,8 @@
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 from typing import Optional
+
+import fsspec
 from tqdm import tqdm
 import requests
 
@@ -38,6 +41,16 @@ def getGDriveLargeContents(id: str, path_archive_local: Path, total_size_GB: flo
             file.write(chunk)
             pbar.update(len(chunk))
         pbar.close()
+
+
+def forward_file_from_GDrive(id_gdrive_contents: str, forward_to: str, size_GB: float) -> None:
+    forward_to = f"simplecache::{forward_to}"
+    with NamedTemporaryFile("wb") as tmp:
+        getGDriveLargeContents(id_gdrive_contents, Path(tmp.name), size_GB)
+        tmp.seek(0)
+        with fsspec.open(forward_to, "wb") as archive:
+            archive.write(tmp.read())
+
 
 if __name__ == "__main__":
     getGDriveLargeContents("1NyiZCXkYTdYBNtD1B-IMAYCVa-0SQsKX", Path("./jsss_auto.zip"))

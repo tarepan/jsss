@@ -1,11 +1,11 @@
-from jsss.getGoogleDriveContents import getGDriveLargeContents
 from typing import Dict, List, NamedTuple, Optional, Union
 from pathlib import Path
 
-import fsspec # type: ignore
+# import fsspec # type: ignore
 from fsspec.utils import get_protocol # type: ignore
 
 from .fs import try_to_acquire_archive_contents
+from .getGoogleDriveContents import forward_file_from_GDrive
 
 
 # ## Glossary
@@ -38,80 +38,70 @@ class ItemIdJSSS(NamedTuple):
 
 
 class JSSS:
+
+    gdrive_contents_id: str = "1NyiZCXkYTdYBNtD1B-IMAYCVa-0SQsKX"
+
     def __init__(
         self,
-        download : bool = False,
-        url: Optional[str] = None,
-        dir_corpus_local: str = "./data/corpuses/JSSS/"
+        adress: Optional[str] = None,
+        download_origin : bool = False,
     ) -> None:
         """
-        Wrapper of JSSS corpus.
-        [Official Website](https://sites.google.com/site/shinnosuketakamichi/research-topics/jsss_corpus).
-        Corpus will be deployed as below.
-
-        {dir_corpus_local}/
-            archive/
-                f"{corpus_name}.zip"
-            contents/
-                {extracted dirs & files}
+        JSSS corpus's archive/contents handler.
 
         Args:
-            download: Download corpus when there is no archive in local.
-            url: Corpus archive url (Various url type (e.g. S3, GCP) is accepted through `fsspec` library).
-            dir_corpus_local: Corpus directory.
+            adress: Corpus archive adress (e.g. path, S3, GCP) from/to which archive will be read/written through `fsspec`.
+            download_origin: Download original corpus when there is no corpus in local and specified adress.
         """
         ver: str = "ver1"
         # Equal to 1st layer directory name of original zip.
         self._corpus_name: str = f"jsss_{ver}"
 
-        self._gdrive_id: str = "1NyiZCXkYTdYBNtD1B-IMAYCVa-0SQsKX"
-        self._url = url
-        self._download = download
-        self._fs: fsspec.AbstractFileSystem = fsspec.filesystem(get_protocol(self._url if self._url else "./"))
-
-        self._path_archive_local = Path(dir_corpus_local) / "archive" / f"{self._corpus_name}.zip"
+        dir_corpus_local: str = "./data/corpuses/JSSS/"
+        default_path_archive = str((Path(dir_corpus_local) / "archive" / f"{self._corpus_name}.zip").resolve())
         self._path_contents_local = Path(dir_corpus_local) / "contents"
+        self._adress = adress if adress else default_path_archive
 
-    def get_archive(self) -> None:
-        """
-        Get the corpus archive file.
-        """
-        # library selection:
-        #   `torchaudio.datasets.utils.download_url` is good for basic purpose, but not compatible with private storages.
-        # todo: caching
-        path_archive = self._path_archive_local
-        if path_archive.exists():
-            if path_archive.is_file():
-                print("Archive file already exists.")
-            else:
-                raise RuntimeError(f"{str(path_archive)} should be archive file or empty, but it is directory.")
-        else:
-            if self._download:
-                if self._url:
-                    self._fs.get_file(self._url, path_archive)
-                else:
-                    # from original Google Drive
-                    size_GB = 1.01
-                    getGDriveLargeContents(self._gdrive_id, path_archive, size_GB)
-            else:
-                raise RuntimeError("Try to get_archive, but `download` is disabled.")
+        self._download_origin = download_origin
+        # self._fs: fsspec.AbstractFileSystem = fsspec.filesystem(get_protocol(self._adress))
+
+    # def get_archive(self) -> None:
+    #     """
+    #     Get the corpus archive file.
+    #     """
+    #     # library selection:
+    #     #   `torchaudio.datasets.utils.download_url` is good for basic purpose, but not compatible with private storages.
+    #     path_archive = self._path_archive_local
+    #     if path_archive.exists():
+    #         if path_archive.is_file():
+    #             print("Archive file already exists.")
+    #         else:
+    #             raise RuntimeError(f"{str(path_archive)} should be archive file or empty, but it is directory.")
+    #     else:
+    #         if self._fs.exists(self._adress):
+    #             self._fs.get_file(self._adress, path_archive)
+    #         elif self._download_origin:
+    #             # from original Google Drive
+    #             size_GB = 1.01
+    #             getGDriveLargeContents(self._gdrive_id, path_archive, size_GB)
+    #         else:
+    #             raise RuntimeError("Try to get an archive, but no file in the adress and `download_origin` is disabled.")
 
     def get_contents(self) -> None:
         """
         Get the archive and extract the contents if needed.
         """
-        # todo: caching
-        path_contents = self._path_contents_local
-
-        acquired = try_to_acquire_archive_contents(
-            path_contents,
-            self._path_archive_local,
-            self._url,
-            self._download,
-            self._gdrive_id,
-            1.01)
+        acquired = try_to_acquire_archive_contents(self._adress, self._path_contents_local)
         if not acquired:
-            raise RuntimeError(f"Specified corpus archive cannot be acquired. Check the link (`{self._url}`) or `download` option.")
+            if self._download_origin:
+                forward_file_from_GDrive(self.gdrive_contents_id, self._adress, 1.01)
+                acquired_in_retry = try_to_acquire_archive_contents(self._adress, self._path_contents_local)
+                if not acquired_in_retry:
+                    msg = "Failed to acquire contents from the adress & origin. "
+                    msg = msg + "Please make an issue in GitHub with information about state/contents of the adress."
+                    raise RuntimeError(msg)
+            else:
+                raise RuntimeError(f"Specified corpus archive (`{self._adress}`) cannot be acquired. Enable `download_origin`")
 
     def get_identities(self) -> List[ItemIdJSSS]:
         """

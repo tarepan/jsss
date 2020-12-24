@@ -58,7 +58,6 @@ class JSSS_wave(Dataset): # I failed to understand this error
         self,
         modes: List[Mode] = ["short-form/basic5000"],
         download_corpus: bool = False,
-        dir_data: str = "./data/",
         corpus_adress: Optional[str] = None,
         dataset_adress: str = "./data/datasets/JSSS_wave/archive/dataset.zip",
         resample_sr: Optional[int] = None,
@@ -81,7 +80,6 @@ class JSSS_wave(Dataset): # I failed to understand this error
         # Store parameters.
         self._resample_sr = resample_sr
         self._transform = transform
-        self._dir_data = dir_data
 
         # Directory structure:
         # {dir_data}/
@@ -91,8 +89,10 @@ class JSSS_wave(Dataset): # I failed to understand this error
         #       archive/dataset.zip
         #       contents/{extracted dirs & files}
         self._corpus = JSSS(download_corpus, corpus_adress, f"{dir_data}/corpuses/JSSS/")
+        JSSS_spec_root = Path(".")/"tmp"/"JSSS_spec"
         self._path_archive_local = Path(dir_data)/"datasets"/"JSSS_wave"/"archive"/"dataset.zip"
-        self._path_contents_local = Path(dir_data)/"datasets"/"JSSS_wave"/"contents"
+        self._path_contents_local = JSSS_spec_root/"contents"
+        dataset_adress = dataset_adress if dataset_adress else str(JSUT_wave_root/"archive"/f"{dirname}.zip")
 
         # Prepare the dataset.
         self._ids: List[ItemIdJSSS] = list(filter(lambda id: id.mode in modes, self._corpus.get_identities()))
