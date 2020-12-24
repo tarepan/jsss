@@ -1,11 +1,11 @@
 [tool.poetry]
-name = "npvcc2016"
+name = "jsss"
 version = "2.0.1"
-description = "npvcc2016: Python loader of npVCC2016 speech corpus"
+description = "jsss - Python loader of JSSS"
 authors = ["Tarepan"]
 license = "MIT"
 readme = "README.md"
-repository = "https://github.com/tarepan/npVCC2016"
+repository = "https://github.com/tarepan/jsss"
 
 
 [tool.poetry.dependencies]
