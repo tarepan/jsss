@@ -5,7 +5,7 @@ from torch.tensor import Tensor
 from torch.utils.data import random_split, DataLoader
 
 from ...dataset.spectrogram import JSSS_spec
-from ....corpus import Mode
+from ....corpus import Subtype
 
 
 class JSSS_spec_DataModule(pl.LightningDataModule):
@@ -18,7 +18,7 @@ class JSSS_spec_DataModule(pl.LightningDataModule):
         batch_size: int,
         download: bool,
         dir_root: str = "./data/",
-        modes: List[Mode] = ["short-form/basic5000"],
+        modes: List[Subtype] = ["short-form/basic5000"],
         transform: Callable[[Tensor], Tensor] = lambda i: i,
         corpus_adress: Optional[str] = None,
         dataset_adress: str = "./data/datasets/JSSS_spec/archive/dataset.zip",

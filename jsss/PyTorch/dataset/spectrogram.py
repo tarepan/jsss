@@ -7,7 +7,7 @@ from torch.utils.data.dataset import Dataset
 from torchaudio import load as load_wav
 from torchaudio.transforms import Spectrogram, Resample # type: ignore
 from .waveform import preprocess_as_wave
-from ...corpus import ItemIdJSSS, Mode, JSSS
+from ...corpus import ItemIdJSSS, Subtype, JSSS
 from ...fs import save_archive, try_to_acquire_archive_contents
 
 
@@ -50,7 +50,7 @@ class JSSS_spec(Dataset): # I failed to understand this error
 
     def __init__(
         self,
-        modes: List[Mode] = ["short-form/basic5000"],
+        modes: List[Subtype] = ["short-form/basic5000"],
         download_corpus: bool = False,
         dir_data: str = "./data/",
         corpus_adress: Optional[str] = None,

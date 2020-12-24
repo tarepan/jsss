@@ -16,7 +16,7 @@ from torchaudio import load as load_wav
 from torchaudio.transforms import Resample
 
 from ...fs import try_to_acquire_archive_contents, save_archive, acquire_zip_fs
-from ...corpus import ItemIdJSSS, Mode, JSSS
+from ...corpus import ItemIdJSSS, Subtype, JSSS
 
 
 def get_dataset_wave_path(dir_dataset: Path, id: ItemIdJSSS) -> Path:
@@ -56,7 +56,7 @@ class JSSS_wave(Dataset): # I failed to understand this error
     """
     def __init__(
         self,
-        modes: List[Mode] = ["short-form/basic5000"],
+        modes: List[Subtype] = ["short-form/basic5000"],
         download_corpus: bool = False,
         corpus_adress: Optional[str] = None,
         dataset_adress: str = "./data/datasets/JSSS_wave/archive/dataset.zip",

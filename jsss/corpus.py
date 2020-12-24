@@ -18,9 +18,9 @@ from .getGoogleDriveContents import forward_file_from_GDrive
 
 # Shortform = Literal["short-form/basic5000", "short-form/onomatopee300", "short-form/voiceactress100"] # >=Python3.8
 # Longform = Literal["long-form/katsura-masakazu", "long-form/udon", "long-form/washington-dc"] # >=Python3.8
-# Mode = Literal[Longform, Shortform, "simplification", "summarization"] # >=Python3.8
-Mode = str
-modes = [
+# Subtype = Literal[Longform, Shortform, "simplification", "summarization"] # >=Python3.8
+Subtype = str
+subtypes = [
     "short-form/basic5000",
     "short-form/onomatopee300",
     "short-form/voiceactress100",
@@ -33,7 +33,7 @@ modes = [
 
 
 class ItemIdJSSS(NamedTuple):
-    mode: Mode
+    mode: Subtype
     serial_num: int
 
 
@@ -121,7 +121,7 @@ class JSSS:
             "summarization": range(1, 227),
         }
         ids: List[ItemIdJSSS] = []
-        for mode in modes:
+        for mode in subtypes:
                 for num in divs[mode]:
                     ids.append(ItemIdJSSS(mode, num))
         return ids
@@ -135,7 +135,7 @@ class JSSS:
         Returns:
             Path of the specified item.
         """
-        name: Dict[Mode, Dict[str, Union[str, int]]] = {
+        name: Dict[Subtype, Dict[str, Union[str, int]]] = {
             "short-form/basic5000": {
                 "prefix": "BASIC5000",
                 "zpad": 4
