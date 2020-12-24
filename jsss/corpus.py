@@ -1,10 +1,10 @@
-from typing import Dict, List, NamedTuple, Optional, Union
+from typing import Optional, Union, NamedTuple, Dict, List
 from pathlib import Path
 
 # import fsspec # type: ignore
-from fsspec.utils import get_protocol # type: ignore
+# from fsspec.utils import get_protocol # type: ignore
 
-from .fs import try_to_acquire_archive_contents
+from .abstract_corpus import AbstractCorpus, get_contents
 from .getGoogleDriveContents import forward_file_from_GDrive
 
 
@@ -37,7 +37,11 @@ class ItemIdJSSS(NamedTuple):
     serial_num: int
 
 
-class JSSS:
+class JSSS(AbstractCorpus[ItemIdJSSS]):
+    """JSSS corpus.
+    
+    Archive/contents handler of JSSS corpus.
+    """
 
     gdrive_contents_id: str = "1NyiZCXkYTdYBNtD1B-IMAYCVa-0SQsKX"
 
@@ -46,13 +50,13 @@ class JSSS:
         adress: Optional[str] = None,
         download_origin : bool = False,
     ) -> None:
-        """
-        JSSS corpus's archive/contents handler.
+        """Initiate JSSS with archive options.
 
         Args:
-            adress: Corpus archive adress (e.g. path, S3, GCP) from/to which archive will be read/written through `fsspec`.
+            adress: Corpus archive adress (e.g. path, S3) from/to which archive will be read/written through `fsspec`.
             download_origin: Download original corpus when there is no corpus in local and specified adress.
         """
+
         ver: str = "ver1"
         # Equal to 1st layer directory name of original zip.
         self._corpus_name: str = f"jsss_{ver}"
@@ -88,20 +92,16 @@ class JSSS:
     #             raise RuntimeError("Try to get an archive, but no file in the adress and `download_origin` is disabled.")
 
     def get_contents(self) -> None:
+        """Get corpus contents into local.
         """
-        Get the archive and extract the contents if needed.
+
+        get_contents(self._adress, self._path_contents_local, self._download_origin, self.forward_from_origin)
+
+    def forward_from_origin(self) -> None:
+        """Forward original corpus archive to the adress.
         """
-        acquired = try_to_acquire_archive_contents(self._adress, self._path_contents_local)
-        if not acquired:
-            if self._download_origin:
-                forward_file_from_GDrive(self.gdrive_contents_id, self._adress, 1.01)
-                acquired_in_retry = try_to_acquire_archive_contents(self._adress, self._path_contents_local)
-                if not acquired_in_retry:
-                    msg = "Failed to acquire contents from the adress & origin. "
-                    msg = msg + "Please make an issue in GitHub with information about state/contents of the adress."
-                    raise RuntimeError(msg)
-            else:
-                raise RuntimeError(f"Specified corpus archive (`{self._adress}`) cannot be acquired. Enable `download_origin`")
+
+        forward_file_from_GDrive(self.gdrive_contents_id, self._adress, 1.01)
 
     def get_identities(self) -> List[ItemIdJSSS]:
         """
@@ -121,9 +121,9 @@ class JSSS:
             "summarization": range(1, 227),
         }
         ids: List[ItemIdJSSS] = []
-        for mode in subtypes:
-                for num in divs[mode]:
-                    ids.append(ItemIdJSSS(mode, num))
+        for subtype in subtypes:
+                for num in divs[subtype]:
+                    ids.append(ItemIdJSSS(subtype, num))
         return ids
 
     def get_item_path(self, id: ItemIdJSSS) -> Path:

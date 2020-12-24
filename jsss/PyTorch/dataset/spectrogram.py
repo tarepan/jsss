@@ -8,7 +8,7 @@ from torchaudio import load as load_wav
 from torchaudio.transforms import Spectrogram, Resample # type: ignore
 from .waveform import preprocess_as_wave
 from ...corpus import ItemIdJSSS, Subtype, JSSS
-from ...fs import save_archive, try_to_acquire_archive_contents
+from ...archive import hash_args, try_to_acquire_archive_contents, save_archive
 
 
 def get_dataset_spec_path(dir_dataset: Path, id: ItemIdJSSS) -> Path:
@@ -44,30 +44,28 @@ class Datum_JSSS_spec_test(NamedTuple):
 
 
 class JSSS_spec(Dataset): # I failed to understand this error
-    """
-    Audio spectrogram dataset from JSSS speech corpus.
+    """Audio spectrogram dataset from JSSS speech corpus.
     """
 
     def __init__(
         self,
         modes: List[Subtype] = ["short-form/basic5000"],
         download_corpus: bool = False,
-        dir_data: str = "./data/",
         corpus_adress: Optional[str] = None,
-        dataset_adress: str = "./data/datasets/npVCC2016_spec/archive/dataset.zip",
+        dataset_adress: Optional[str] = None,
         resample_sr: Optional[int] = None,
         transform: Callable[[Tensor], Tensor] = (lambda i: i),
     ):
         """
         Args:
-            mode: Sub corpus types.
+            modes: Sub corpus types.
             download_corpus: Whether download the corpus or not when dataset is not found.
-            dir_data: Directory in which corpus and dataset are saved.
             corpus_adress: URL/localPath of corpus archive (remote url, like `s3::`, can be used). None use default URL.
             dataset_adress: URL/localPath of dataset archive (remote url, like `s3::`, can be used).
             resample_sr: If specified, resample with specified sampling rate.
             transform: Tensor transform on load.
         """
+
         # Design Notes:
         #   Dataset is often saved in the private adress, so there is no `download_dataset` safety flag.
         #   `download` is common option in torchAudio datasets.
@@ -76,31 +74,22 @@ class JSSS_spec(Dataset): # I failed to understand this error
         self._resample_sr = resample_sr
         self._transform = transform
 
-        # Directory structure:
-        # {dir_data}/
-        #   corpuses/...
-        #   datasets/
-        #     JSSS_spec/
-        #       archive/dataset.zip
-        #       contents/{extracted dirs & files}
-        self._corpus = JSSS(download_corpus, corpus_adress, f"{dir_data}/corpuses/JSSS/")
-        self._path_archive_local = Path(dir_data)/"datasets"/"JSSS_spec"/"archive"/"dataset.zip"
-        self._path_contents_local = Path(dir_data)/"datasets"/"JSSS_spec"/"contents"
+        self._corpus = JSSS(corpus_adress, download_corpus)
+        dirname = hash_args(modes, download_corpus, corpus_adress, dataset_adress, resample_sr)
+        JSSS_spec_root = Path(".")/"tmp"/"JSSS_spec"
+        self._path_contents_local = JSSS_spec_root/"contents"/dirname
+        dataset_adress = dataset_adress if dataset_adress else str(JSSS_spec_root/"archive"/f"{dirname}.zip")
 
-        # Prepare the dataset.
+        # Prepare data identities.
         self._ids: List[ItemIdJSSS] = list(filter(lambda id: id.mode in modes, self._corpus.get_identities()))
-        contents_acquired = try_to_acquire_archive_contents(
-            self._path_contents_local,
-            self._path_archive_local,
-            dataset_adress,
-            True
-        )
+
+        # Deploy dataset contents.
+        contents_acquired = try_to_acquire_archive_contents(dataset_adress, self._path_contents_local)
         if not contents_acquired:
             # Generate the dataset contents from corpus
             print("Dataset archive file is not found. Automatically generating new dataset...")
             self._generate_dataset_contents()
-            # save dataset archive
-            save_archive(self._path_contents_local, self._path_archive_local, dataset_adress)
+            save_archive(self._path_contents_local, dataset_adress)
             print("Dataset contents was generated and archive was saved.")
 
     def _generate_dataset_contents(self) -> None:

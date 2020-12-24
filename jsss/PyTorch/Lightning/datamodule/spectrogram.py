@@ -17,17 +17,15 @@ class JSSS_spec_DataModule(pl.LightningDataModule):
         self,
         batch_size: int,
         download: bool,
-        dir_root: str = "./data/",
         modes: List[Subtype] = ["short-form/basic5000"],
         transform: Callable[[Tensor], Tensor] = lambda i: i,
         corpus_adress: Optional[str] = None,
-        dataset_adress: str = "./data/datasets/JSSS_spec/archive/dataset.zip",
+        dataset_adress: Optional[str] = None,
         resample_sr: Optional[int] = None,
     ):
         super().__init__()
         self.n_batch = batch_size
         self.download = download
-        self.dir_root = dir_root
         self.modes = modes
         self.transform = transform
         self.corpus_adress = corpus_adress
@@ -39,29 +37,11 @@ class JSSS_spec_DataModule(pl.LightningDataModule):
 
     def setup(self, stage: Union[str, None] = None) -> None:
         if stage == "fit" or stage is None:
-            dataset_train = JSSS_spec(
-                modes=self.modes,
-                transform=self.transform,
-                download_corpus=self.download,
-                dir_data=self.dir_root,
-                corpus_adress=self.corpus_adress,
-                dataset_adress=self.dataset_adress,
-                resample_sr=self._resample_sr,
-            )
+            dataset_train = JSSS_spec(self.modes, self.download, None, None, self._resample_sr, self.transform)
             n_train = len(dataset_train)
-            self.data_train, self.data_val = random_split(
-                dataset_train, [n_train - 10, 10]
-            )
+            self.data_train, self.data_val = random_split(dataset_train, [n_train - 10, 10])
         if stage == "test" or stage is None:
-            self.data_test = JSSS_spec(
-                modes=self.modes,
-                transform=self.transform,
-                download_corpus=self.download,
-                dir_data=self.dir_root,
-                corpus_adress=self.corpus_adress,
-                dataset_adress=self.dataset_adress,
-                resample_sr=self._resample_sr,
-            )
+            self.data_test = JSSS_spec(self.modes, self.download, None, None, self._resample_sr, self.transform)
 
     def train_dataloader(self, *args, **kwargs):
         return DataLoader(self.data_train, batch_size=self.n_batch)
