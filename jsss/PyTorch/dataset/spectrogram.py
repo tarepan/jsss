@@ -98,10 +98,12 @@ class JSSS_spec(Dataset): # I failed to understand this error
         """
 
         self._corpus.get_contents()
-        for id in self._corpus.get_identities():
+        print("Preprocessing...")
+        for id in self._ids:
             path_wav = self._corpus.get_item_path(id)
             preprocess_as_spec(path_wav, id, self._path_contents_local, self._resample_sr)
             preprocess_as_wave(path_wav, id, self._path_contents_local, self._resample_sr)
+        print("Preprocessed.")
 
     def _load_datum(self, id: ItemIdJSSS) -> Union[Datum_JSSS_spec_train, Datum_JSSS_spec_test]:
         spec_path = get_dataset_spec_path(self._path_contents_local, id)

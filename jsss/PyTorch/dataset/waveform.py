@@ -102,9 +102,11 @@ class JSSS_wave(Dataset): # I failed to understand this error
         """
 
         self._corpus.get_contents()
-        for id in self._corpus.get_identities():
+        print("Preprocessing...")
+        for id in self._ids:
             path_wav = self._corpus.get_item_path(id)
             preprocess_as_wave(path_wav, id, self._path_contents_local, self._resample_sr)
+        print("Preprocessed.")
 
     def _load_datum(self, id: ItemIdJSSS) -> Datum_JSSS_wave:
         waveform: Tensor = load(get_dataset_wave_path(self._path_contents_local, id))
