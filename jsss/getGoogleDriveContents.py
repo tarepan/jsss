@@ -45,7 +45,7 @@ def getGDriveLargeContents(id: str, path_archive_local: Path, total_size_GB: flo
 
 def forward_file_from_GDrive(id_gdrive_contents: str, forward_to: str, size_GB: float) -> None:
     forward_to = f"simplecache::{forward_to}"
-    with NamedTemporaryFile("wb") as tmp:
+    with NamedTemporaryFile("w+b") as tmp:
         getGDriveLargeContents(id_gdrive_contents, Path(tmp.name), size_GB)
         tmp.seek(0)
         with fsspec.open(forward_to, "wb") as archive:
