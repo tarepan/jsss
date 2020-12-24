@@ -71,7 +71,7 @@ class JSSS(AbstractCorpus[ItemIdJSSS]):
         """Forward original corpus archive to the adress.
         """
 
-        forward_file_from_GDrive(self.gdrive_contents_id, self._adress, 1.01)
+        forward_file_from_GDrive(self.gdrive_contents_id, self._adress, 1.09)
 
     def get_identities(self) -> List[ItemIdJSSS]:
         """Get corpus item identities.
