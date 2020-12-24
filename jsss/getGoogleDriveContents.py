@@ -48,8 +48,10 @@ def forward_file_from_GDrive(id_gdrive_contents: str, forward_to: str, size_GB: 
     with NamedTemporaryFile("w+b") as tmp:
         getGDriveLargeContents(id_gdrive_contents, Path(tmp.name), size_GB)
         tmp.seek(0)
+        print("Writing to the adress...")
         with fsspec.open(forward_to, "wb") as archive:
             archive.write(tmp.read())
+        print("Written.")
 
 
 if __name__ == "__main__":
