@@ -14,8 +14,8 @@ from torch.utils.data import Dataset
 # currently there is no stub in torchaudio [issue](https://github.com/pytorch/audio/issues/615)
 from torchaudio import load as load_wav
 from torchaudio.transforms import Resample
+from corpuspy.components.archive import hash_args, save_archive, try_to_acquire_archive_contents
 
-from ...archive import hash_args, save_archive, try_to_acquire_archive_contents
 from ...corpus import ItemIdJSSS, Subtype, JSSS
 
 

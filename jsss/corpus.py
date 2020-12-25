@@ -1,8 +1,9 @@
 from typing import Optional, Union, NamedTuple, Dict, List
 from pathlib import Path
 
-from .abstract_corpus import AbstractCorpus, get_contents
-from .getGoogleDriveContents import forward_file_from_GDrive
+from corpuspy.interface import AbstractCorpus
+from corpuspy.helper.forward import forward_from_GDrive
+from corpuspy.helper.contents import get_contents
 
 
 # Shortform = Literal["short-form/basic5000", "short-form/onomatopee300", "short-form/voiceactress100"] # >=Python3.8
@@ -71,7 +72,7 @@ class JSSS(AbstractCorpus[ItemIdJSSS]):
         """Forward original corpus archive to the adress.
         """
 
-        forward_file_from_GDrive(self.gdrive_contents_id, self._adress, 1.09)
+        forward_from_GDrive(self.gdrive_contents_id, self._adress, 1.09)
 
     def get_identities(self) -> List[ItemIdJSSS]:
         """Get corpus item identities.
