@@ -9,25 +9,44 @@ We need portable & flexible loader for streamline development.
 `jsss` is the one!  
 
 ## Demo
-
-Python/PyTorch  
-
-<!-- ```bash
-pip install npvcc2016
-```
+### Python - Access an item
+Get corpus item *path* without thinking about corpus handling.  
 
 ```python
-from npvcc2016.PyTorch.dataset.waveform import NpVCC2016
+# !pip install git+https://github.com/tarepan/jsss
+from jsss.corpus import JSSS
 
-dataset = NpVCC2016(".", train=True, download=True)
+# Get corpus archive and extract contents transparently.
+corpus = JSSS(download_origin=True)
+corpus.get_contents()
+# > 32%|██████████                      | 0.33G/1.01G [00:42<01:31, 223MB/s]
+
+# Get item IDs.
+items = corpus.get_identities()
+
+# Get path of each items.
+for id in items:
+  path = corpus.get_item_path(id)
+  print(path)
+  # > data/corpuses/JSSS/contents/jsss_ver1/short-form/basic5000/wav24kHz16bit/BASIC5000_0001.wav
+  # > data/corpuses/JSSS/contents/jsss_ver1/short-form/basic5000/wav24kHz16bit/BASIC5000_0002.wav
+  # ...
+```
+### Python/PyTorch - 1-lile Dataset
+Get waveform dataset for PyTorch with 1-line!  
+
+```python
+# !pip install git+https://github.com/tarepan/jsss
+from jsss.PyTorch.dataset.waveform import JSSS_wave
+
+# That's all!
+dataset = JSSS_wave(download_corpus=True)
 
 for datum in dataset:
-    print("Yeah, data is acquired with only two line of code!!")
-    print(datum) # (datum, label) tuple provided
-```  -->
-
-`jsss` transparently downloads corpus, structures the data and provides standarized datasets.  
-What you have to do is only instantiating the class!  
+    print("Yeah, data is acquired with only single line of code!!")
+    print(datum)
+    # > Datum_JSSS_wave(waveform=tensor([-0.0007, -0.0007, -0.0008, ...
+```
 
 ## APIs
 Current `jsss` support PyTorch.  
