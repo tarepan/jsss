@@ -8,7 +8,7 @@ from torchaudio import load as load_wav
 from torchaudio.transforms import Spectrogram, Resample # type: ignore
 from corpuspy.components.archive import hash_args, try_to_acquire_archive_contents, save_archive
 
-from .waveform import preprocess_as_wave
+from .waveform import get_dataset_wave_path, preprocess_as_wave
 from ...corpus import ItemIdJSSS, Subtype, JSSS
 
 
@@ -48,9 +48,9 @@ class Datum_JSSS_spec_test(NamedTuple):
 class JSSS_spec(Dataset): # I failed to understand this error
     """Audio spectrogram dataset from JSSS speech corpus.
     """
-
     def __init__(
         self,
+        train: bool,
         subtypes: List[Subtype] = ["short-form/basic5000"],
         download_corpus: bool = False,
         corpus_adress: Optional[str] = None,
@@ -60,6 +60,7 @@ class JSSS_spec(Dataset): # I failed to understand this error
     ):
         """
         Args:
+            train: train_dataset if True else validation/test_dataset.
             subtypes: Sub corpus types.
             download_corpus: Whether download the corpus or not when dataset is not found.
             corpus_adress: URL/localPath of corpus archive (remote url, like `s3::`, can be used). None use default URL.
@@ -73,6 +74,7 @@ class JSSS_spec(Dataset): # I failed to understand this error
         #   `download` is common option in torchAudio datasets.
 
         # Store parameters.
+        self._train = train
         self._resample_sr = resample_sr
         self._transform = transform
 
@@ -110,10 +112,11 @@ class JSSS_spec(Dataset): # I failed to understand this error
         spec_path = get_dataset_spec_path(self._path_contents_local, id)
         spec: Tensor = self._transform(load(spec_path))
         # todo: trains/evals
-        return Datum_JSSS_spec_train(spec, f"{id.subtype}-{id.serial_num}")
-        # else:
-        #     waveform: Tensor = load(get_dataset_wave_path(self._path_contents_local, id))
-        #     return Datum_JSSS_spec_test(waveform, spec, f"{id.mode}-{id.serial_num}")
+        if self._train:
+            return Datum_JSSS_spec_train(spec, f"{id.subtype}-{id.serial_num}")
+        else:
+            waveform: Tensor = load(get_dataset_wave_path(self._path_contents_local, id))
+            return Datum_JSSS_spec_test(waveform, spec, f"{id.subtype}-{id.serial_num}")
 
     def __getitem__(self, n: int) -> Union[Datum_JSSS_spec_train, Datum_JSSS_spec_test]:
         """Load the n-th sample from the dataset.
