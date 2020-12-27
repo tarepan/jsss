@@ -13,16 +13,27 @@ Subtype = str
 subtypes = [
     "short-form/basic5000",
     "short-form/onomatopee300",
-    # Note: No.077 is missing.
     "short-form/voiceactress100",
     "long-form/katsura-masakazu",
     "long-form/udon",
     "long-form/washington-dc",
-    # Note: Various files are missing.
     "simplification",
     # # summarization have an issue about complicated file name, so currently not supported.  
     # "summarization"
 ]
+
+# ## Corpus Notes
+# Some file is missing.
+# 
+# - "short-form/onomatopee300": No.077
+# - "simplification": total 43 files
+# 
+# Number of files written in the original paper match this missing, so it is proper.
+# 
+# - short-form #3284 == (3000 + 185 + 100) - 1
+# - simplification # 184 == 227 - 43
+# 
+# File name handling is abstracted by `jsss`, so you do not have to warry! Yeah!
 
 
 class ItemIdJSSS(NamedTuple):
