@@ -1,4 +1,4 @@
-from typing import Optional, Union, NamedTuple, Dict, List
+from typing import Iterable, Optional, Union, NamedTuple, Dict, List
 from pathlib import Path
 
 from corpuspy.interface import AbstractCorpus
@@ -13,13 +13,15 @@ Subtype = str
 subtypes = [
     "short-form/basic5000",
     "short-form/onomatopee300",
+    # Note: No.077 is missing.
     "short-form/voiceactress100",
     "long-form/katsura-masakazu",
     "long-form/udon",
     "long-form/washington-dc",
+    # Note: Various files are missing.
     "simplification",
-    # summarization have an issue about complicated file name, so currently not supported.  
-    "summarization"
+    # # summarization have an issue about complicated file name, so currently not supported.  
+    # "summarization"
 ]
 
 
@@ -81,7 +83,7 @@ class JSSS(AbstractCorpus[ItemIdJSSS]):
             Full item identity list.
         """
 
-        subs = {
+        subs: Dict[Subtype, Iterable[int]] = {
             "short-form/basic5000": range(1, 3001),
             "short-form/onomatopee300": range(1, 186),
             "short-form/voiceactress100": range(1, 101),
@@ -91,6 +93,15 @@ class JSSS(AbstractCorpus[ItemIdJSSS]):
             "simplification": range(1, 228),
             "summarization": range(1, 227),
         }
+        # patch
+        missing_omtp = [77]
+        subs["short-form/onomatopee300"] = filter(lambda i: i not in missing_omtp, subs["short-form/onomatopee300"])
+        # generator: [i for i in range(1, 228) if i not in [int(name[-7:-4]) for name in os.listdir("./jsss_ver1/jsss_ver1/simplification/wav24kHz16bit/")]
+        missing_smpl = [34, 38, 39, 41, 46, 53, 56, 57, 60, 62, 70, 71, 72, 73, 75, 76,
+            109, 110, 118, 133, 143, 145, 146, 149, 156, 157, 165, 169, 170, 171, 172, 179, 183, 184, 186, 189, 190, 195,
+            200, 201, 221, 223, 225]
+        subs["simplification"] = filter(lambda i: i not in missing_smpl, subs["simplification"])
+
         ids: List[ItemIdJSSS] = []
         for subtype in subtypes:
                 for num in subs[subtype]:
@@ -121,15 +132,15 @@ class JSSS(AbstractCorpus[ItemIdJSSS]):
             },
             "long-form/katsura-masakazu": {
                 "prefix": "KATSURA-MASAKAZU",
-                "zpad": 2
+                "zpad": 3
             },
             "long-form/udon": {
                 "prefix": "UDON",
-                "zpad": 2
+                "zpad": 3
             },
             "long-form/washington-dc": {
                 "prefix": "WASHINGTON-DC",
-                "zpad": 2
+                "zpad": 3
             },
             "simplification": {
                 "prefix": "SIMPLIFICATION",
