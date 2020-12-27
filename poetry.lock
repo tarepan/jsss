@@ -65,7 +65,7 @@ tqdm = "^4.54.1"
 type = "git"
 url = "https://github.com/tarepan/corpuspy.git"
 reference = "main"
-resolved_reference = "2f42619c437517ece926c0310627e6851b16cb2d"
+resolved_reference = "5dd84b0bba84028d520394e89a735078693f6f94"
 
 [[package]]
 name = "dataclasses"
