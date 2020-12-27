@@ -23,12 +23,12 @@ subtypes = [
 ]
 
 # ## Corpus Notes
-# Some file is missing.
+# Some files are missing.
 # 
 # - "short-form/onomatopee300": No.077
 # - "simplification": total 43 files
 # 
-# Number of files written in the original paper match this missing, so it is proper.
+# The number of files written in the original paper match this missing, so it is proper.
 # 
 # - short-form #3284 == (3000 + 185 + 100) - 1
 # - simplification # 184 == 227 - 43
