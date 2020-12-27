@@ -130,4 +130,14 @@ class JSSS_spec(Dataset): # I failed to understand this error
 
 
 if __name__ == "__main__":
-    pass
+    # Dataset load demo
+    from jsss.PyTorch.dataset.spectrogram import JSSS_spec
+
+
+    ds = JSSS_spec(True, ["short-form/basic5000"], download_corpus=True)
+    ds = JSSS_spec(True, ["short-form/onomatopee300"], download_corpus=True)
+    ds = JSSS_spec(True, ["short-form/voiceactress100"], download_corpus=True)
+    ds = JSSS_spec(True, ["long-form/katsura-masakazu"], download_corpus=True)
+    ds = JSSS_spec(True, ["long-form/udon"], download_corpus=True)
+    ds = JSSS_spec(True, ["long-form/washington-dc"], download_corpus=True)
+    ds = JSSS_spec(True, ["simplification"], download_corpus=True)
