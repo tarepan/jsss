@@ -25,7 +25,7 @@ subtypes = [
 # ## Corpus Notes
 # Some files are missing.
 # 
-# - "short-form/onomatopee300": No.077
+# - "short-form/voiceactress100": No.077
 # - "simplification": total 43 files
 # 
 # The number of files written in the original paper match this missing, so it is proper.
@@ -105,8 +105,8 @@ class JSSS(AbstractCorpus[ItemIdJSSS]):
             "summarization": range(1, 227),
         }
         # patch
-        missing_omtp = [77]
-        subs["short-form/onomatopee300"] = filter(lambda i: i not in missing_omtp, subs["short-form/onomatopee300"])
+        missing_actr = [77]
+        subs["short-form/voiceactress100"] = filter(lambda i: i not in missing_actr, subs["short-form/voiceactress100"])
         # generator: [i for i in range(1, 228) if i not in [int(name[-7:-4]) for name in os.listdir("./jsss_ver1/jsss_ver1/simplification/wav24kHz16bit/")]
         missing_smpl = [34, 38, 39, 41, 46, 53, 56, 57, 60, 62, 70, 71, 72, 73, 75, 76,
             109, 110, 118, 133, 143, 145, 146, 149, 156, 157, 165, 169, 170, 171, 172, 179, 183, 184, 186, 189, 190, 195,
