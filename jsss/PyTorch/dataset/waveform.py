@@ -54,26 +54,29 @@ class JSSS_wave(Dataset): # I failed to understand this error
     """
     def __init__(
         self,
+        resample_sr: Optional[int],
         subtypes: List[Subtype] = ["short-form/basic5000"],
         download_corpus: bool = False,
         corpus_adress: Optional[str] = None,
         dataset_adress: Optional[str] = None,
-        resample_sr: Optional[int] = None,
         transform: Callable[[Tensor], Tensor] = (lambda i: i),
     ):
         """
         Args:
             subtypes: Sub corpus types.
+            resample_sr: If not None, resample with specified sampling rate.
             download_corpus: Whether download the corpus or not when dataset is not found.
             corpus_adress: URL/localPath of corpus archive (remote url, like `s3::`, can be used). None use default URL.
             dataset_adress: URL/localPath of dataset archive (remote url, like `s3::`, can be used).
-            resample_sr: If specified, resample with specified sampling rate.
             transform: Tensor transform on load.
         """
 
         # Design Notes:
-        #   Dataset is often saved in the private adress, so there is no `download_dataset` safety flag.
-        #   `download` is common option in torchAudio datasets.
+        #   Sampling rate:
+        #     Sampling rates of dataset A and B should match, so `sampling_rate` is not a optional, but required argument.
+        #   Download:
+        #     Dataset is often saved in the private adress, so there is no `download_dataset` safety flag.
+        #     `download` is common option in torchAudio datasets.
 
         # Store parameters.
         self._resample_sr = resample_sr

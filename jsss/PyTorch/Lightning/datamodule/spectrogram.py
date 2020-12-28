@@ -37,11 +37,11 @@ class JSSS_spec_DataModule(pl.LightningDataModule):
 
     def setup(self, stage: Union[str, None] = None) -> None:
         if stage == "fit" or stage is None:
-            dataset_train = JSSS_spec(self._subtypes, self.download, None, None, self._resample_sr, self.transform)
+            dataset_train = JSSS_spec(True, self._resample_sr, self._subtypes, self.download, None, None, self.transform)
             n_train = len(dataset_train)
             self.data_train, self.data_val = random_split(dataset_train, [n_train - 10, 10])
         if stage == "test" or stage is None:
-            self.data_test = JSSS_spec(self._subtypes, self.download, None, None, self._resample_sr, self.transform)
+            self.data_test = JSSS_spec(True, self._resample_sr, self._subtypes, self.download, None, None, self.transform)
 
     def train_dataloader(self, *args, **kwargs):
         return DataLoader(self.data_train, batch_size=self.n_batch)
