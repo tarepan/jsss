@@ -20,7 +20,7 @@ class JSSS_spec_DataModule(pl.LightningDataModule):
         subtypes: List[Subtype] = ["short-form/basic5000"],
         transform: Callable[[Tensor], Tensor] = lambda i: i,
         corpus_adress: Optional[str] = None,
-        dataset_adress: Optional[str] = None,
+        dataset_dir_adress: Optional[str] = None,
         resample_sr: Optional[int] = None,
     ):
         super().__init__()
@@ -29,7 +29,7 @@ class JSSS_spec_DataModule(pl.LightningDataModule):
         self._subtypes = subtypes
         self.transform = transform
         self.corpus_adress = corpus_adress
-        self.dataset_adress = dataset_adress
+        self._dataset_dir_adress = dataset_dir_adress
         self._resample_sr = resample_sr
 
     def prepare_data(self, *args, **kwargs) -> None:
@@ -37,11 +37,13 @@ class JSSS_spec_DataModule(pl.LightningDataModule):
 
     def setup(self, stage: Union[str, None] = None) -> None:
         if stage == "fit" or stage is None:
-            dataset_train = JSSS_spec(True, self._resample_sr, self._subtypes, self.download, None, None, self.transform)
+            dataset_train = JSSS_spec(True, self._resample_sr, self._subtypes, self.download,
+                self.corpus_adress, self._dataset_dir_adress, self.transform)
             n_train = len(dataset_train)
             self.data_train, self.data_val = random_split(dataset_train, [n_train - 10, 10])
         if stage == "test" or stage is None:
-            self.data_test = JSSS_spec(True, self._resample_sr, self._subtypes, self.download, None, None, self.transform)
+            self.data_test = JSSS_spec(True, self._resample_sr, self._subtypes, self.download,
+                self.corpus_adress, self._dataset_dir_adress, self.transform)
 
     def train_dataloader(self, *args, **kwargs):
         return DataLoader(self.data_train, batch_size=self.n_batch)

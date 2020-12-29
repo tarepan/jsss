@@ -58,7 +58,7 @@ class JSSS_wave(Dataset): # I failed to understand this error
         subtypes: List[Subtype] = ["short-form/basic5000"],
         download_corpus: bool = False,
         corpus_adress: Optional[str] = None,
-        dataset_adress: Optional[str] = None,
+        dataset_dir_adress: Optional[str] = None,
         transform: Callable[[Tensor], Tensor] = (lambda i: i),
     ):
         """
@@ -67,7 +67,7 @@ class JSSS_wave(Dataset): # I failed to understand this error
             resample_sr: If not None, resample with specified sampling rate.
             download_corpus: Whether download the corpus or not when dataset is not found.
             corpus_adress: URL/localPath of corpus archive (remote url, like `s3::`, can be used). None use default URL.
-            dataset_adress: URL/localPath of dataset archive (remote url, like `s3::`, can be used).
+            dataset_dir_adress: URL/localPath of JSSS_wave dataset directory (remote url, like `s3::`, can be used).
             transform: Tensor transform on load.
         """
 
@@ -83,21 +83,22 @@ class JSSS_wave(Dataset): # I failed to understand this error
         self._transform = transform
 
         self._corpus = JSSS(corpus_adress, download_corpus)
-        dirname = hash_args(subtypes, download_corpus, corpus_adress, dataset_adress, resample_sr)
+        arg_hash = hash_args(subtypes, resample_sr)
         JSSS_wave_root = Path(".")/"tmp"/"JSSS_wave"
-        self._path_contents_local = JSSS_wave_root/"contents"/dirname
-        dataset_adress = dataset_adress if dataset_adress else str(JSSS_wave_root/"archive"/f"{dirname}.zip")
+        self._path_contents_local = JSSS_wave_root/"contents"/arg_hash
+        dataset_dir_adress = dataset_dir_adress if dataset_dir_adress else str(JSSS_wave_root/"archive")
+        dataset_archive_adress = f"{dataset_dir_adress}/{arg_hash}.zip"
 
         # Prepare data identities.
         self._ids: List[ItemIdJSSS] = list(filter(lambda id: id.subtype in subtypes, self._corpus.get_identities()))
 
         # Deploy dataset contents.
-        contents_acquired = try_to_acquire_archive_contents(dataset_adress, self._path_contents_local)
+        contents_acquired = try_to_acquire_archive_contents(dataset_archive_adress, self._path_contents_local)
         if not contents_acquired:
             # Generate the dataset contents from corpus
             print("Dataset archive file is not found. Automatically generating new dataset...")
             self._generate_dataset_contents()
-            save_archive(self._path_contents_local, dataset_adress)
+            save_archive(self._path_contents_local, dataset_archive_adress)
             print("Dataset contents was generated and archive was saved.")
 
     def _generate_dataset_contents(self) -> None:
